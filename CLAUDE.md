@@ -26,7 +26,7 @@
 | `risk-desk` | 한도·노출 해석 | `risk.json`, `positions.json` | `desks/outputs/<날짜>/risk.md` | 없음 |
 | `pnl-desk` | 손익·기여도 해석 | `pnl.json`, `positions.json`, `trades.json` | `desks/outputs/<날짜>/pnl.md` | 없음 |
 | `compliance` | 게시 전 판정 | 초안 + 해당일 JSON | `desks/outputs/<날짜>/compliance-<slug>.md` | 없음 |
-| `editor` | 초안 작성, PR | 데스크 산출물, 운영자 메모 | 블로그 글, PR | git·gh·npm만 |
+| `editor` | 초안 작성, PR | 데스크 산출물, 운영자 메모 | 블로그 글, PR | git·gh·npm·검사 스크립트 |
 
 백오피스(원장·대사·체결 확인)는 에이전트가 아니라 비공개 엔진의 코드다. 그 결과가 `flags.json`의 `reconciliation`으로 들어온다.
 
