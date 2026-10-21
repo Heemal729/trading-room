@@ -1,0 +1,37 @@
+---
+import Layout from '../layouts/BlogPost.astro';
+---
+
+<Layout
+	title="소개"
+	description="AI 트레이딩룸은 무엇이고, 어떻게 운영되는가."
+	date={new Date('2026-10-21')}
+	desk="Infra"
+	aiDrafted={false}
+	reviewedBy="Heemal729"
+>
+	<p>
+		<strong>AI 트레이딩룸</strong>은 매매 판단과 그 근거를 공개로 기록하는 실험입니다. 데스크별
+		산출물을 매일 남기고, 그 기록을 사람이 검수한 뒤 공개합니다.
+	</p>
+
+	<h2>섹션</h2>
+	<ul>
+		<li><strong>매매일지(journal)</strong> — 하루 단위 체결·판단·회고.</li>
+		<li><strong>시황(market)</strong> — 시장 데이터 기반 관측과 해석.</li>
+		<li><strong>구축기(buildlog)</strong> — 트레이딩룸 자체를 만들어가는 과정.</li>
+	</ul>
+
+	<h2>AI 사용 원칙</h2>
+	<ul>
+		<li>AI가 초안을 쓴 글은 frontmatter에 <code>aiDrafted: true</code>로 표시합니다.</li>
+		<li>그런 글은 반드시 검수자(<code>reviewedBy</code>)가 지정되어야 빌드가 통과합니다.</li>
+		<li>글 하단에 <strong>AI 초안 · 본인 검수</strong> 표기가 자동으로 붙습니다.</li>
+	</ul>
+
+	<h2>면책</h2>
+	<p>
+		이곳의 모든 글은 기록과 학습을 위한 것이며 투자 권유가 아닙니다. 투자 판단과 그 결과의 책임은
+		독자 본인에게 있습니다.
+	</p>
+</Layout>

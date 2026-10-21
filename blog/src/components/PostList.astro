@@ -1,0 +1,89 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { AI_DRAFT_NOTICE, type SectionId } from '../consts';
+import { withBase } from '../lib/path';
+import FormattedDate from './FormattedDate.astro';
+
+type AnyPost = CollectionEntry<'journal' | 'market' | 'buildlog'>;
+
+interface Props {
+	section: SectionId;
+	posts: AnyPost[];
+}
+
+const { section, posts } = Astro.props;
+---
+
+{
+	posts.length === 0 ? (
+		<p class="empty">아직 글이 없습니다.</p>
+	) : (
+		<ul class="post-list">
+			{posts.map((post) => (
+				<li>
+					<a href={withBase(`/${section}/${post.id}/`)}>
+						<h3 class="title">{post.data.title}</h3>
+					</a>
+					<p class="meta">
+						<FormattedDate date={post.data.date} />
+						<span class="sep">·</span>
+						<span class="desk">{post.data.desk}</span>
+						{post.data.aiDrafted && <span class="ai">{AI_DRAFT_NOTICE}</span>}
+					</p>
+					{post.data.description && <p class="desc">{post.data.description}</p>}
+				</li>
+			))}
+		</ul>
+	)
+}
+
+<style>
+	.post-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.post-list li {
+		padding: 1.4em 0;
+		border-bottom: 1px solid rgb(var(--gray-light));
+	}
+	.post-list a {
+		text-decoration: none;
+	}
+	.title {
+		margin: 0 0 0.3em 0;
+		color: rgb(var(--black));
+		font-size: 1.4em;
+		line-height: 1.25;
+	}
+	.post-list a:hover .title {
+		color: rgb(var(--accent));
+	}
+	.meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5em;
+		margin: 0;
+		color: rgb(var(--gray));
+		font-size: 0.9em;
+	}
+	.desk {
+		font-variant: all-small-caps;
+		letter-spacing: 0.04em;
+	}
+	.ai {
+		padding: 0.1em 0.5em;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 999px;
+		color: var(--accent-dark);
+		font-size: 0.85em;
+	}
+	.desc {
+		margin: 0.6em 0 0 0;
+		color: rgb(var(--gray-dark));
+	}
+	.empty {
+		color: rgb(var(--gray));
+	}
+</style>

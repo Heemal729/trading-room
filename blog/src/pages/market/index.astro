@@ -1,0 +1,38 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import PostList from '../../components/PostList.astro';
+import { SECTIONS, SITE_TITLE } from '../../consts';
+
+const section = SECTIONS.find((s) => s.id === 'market')!;
+const posts = (await getCollection('market')).sort(
+	(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<!doctype html>
+<html lang="ko">
+	<head>
+		<BaseHead title={`${section.label} | ${SITE_TITLE}`} description={section.description} />
+		<style>
+			main {
+				width: 760px;
+			}
+			.lede {
+				margin: 0 0 2em 0;
+				color: rgb(var(--gray));
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>{section.label}</h1>
+			<p class="lede">{section.description}</p>
+			<PostList section="market" posts={posts} />
+		</main>
+		<Footer />
+	</body>
+</html>

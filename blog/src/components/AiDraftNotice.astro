@@ -1,0 +1,37 @@
+---
+import { AI_DRAFT_NOTICE } from '../consts';
+
+interface Props {
+	reviewedBy?: string;
+}
+
+const { reviewedBy } = Astro.props;
+---
+
+<aside class="ai-notice">
+	<span class="badge">{AI_DRAFT_NOTICE}</span>
+	{reviewedBy && <span class="who">검수: {reviewedBy}</span>}
+</aside>
+
+<style>
+	.ai-notice {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75em;
+		margin: 3em 0 0 0;
+		padding: 0.9em 1.1em;
+		border: 1px solid rgb(var(--gray-light));
+		border-left: 4px solid var(--accent);
+		border-radius: 8px;
+		background: rgb(var(--gray-light), 0.35);
+		font-size: 0.9em;
+	}
+	.badge {
+		font-weight: 700;
+		color: var(--accent-dark);
+	}
+	.who {
+		color: rgb(var(--gray));
+	}
+</style>

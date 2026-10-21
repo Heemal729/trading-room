@@ -1,0 +1,109 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Header from '../components/Header.astro';
+import { AI_DRAFT_NOTICE, SECTIONS, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { withBase } from '../lib/path';
+
+const sections = await Promise.all(
+	SECTIONS.map(async (section) => {
+		const posts = (await getCollection(section.id)).sort(
+			(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+		);
+		return { ...section, latest: posts.slice(0, 3) };
+	}),
+);
+---
+
+<!doctype html>
+<html lang="ko">
+	<head>
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<style>
+			main {
+				width: 760px;
+			}
+			.lede {
+				margin: 0 0 2.5em 0;
+				color: rgb(var(--gray-dark));
+			}
+			.section {
+				margin-bottom: 2.5em;
+				padding-bottom: 1.5em;
+				border-bottom: 1px solid rgb(var(--gray-light));
+			}
+			.section h2 {
+				margin: 0 0 0.2em 0;
+			}
+			.section h2 a {
+				text-decoration: none;
+			}
+			.section-desc {
+				margin: 0 0 1em 0;
+				color: rgb(var(--gray));
+				font-size: 0.95em;
+			}
+			ul {
+				margin: 0;
+				padding: 0;
+				list-style: none;
+			}
+			li {
+				margin-bottom: 0.6em;
+			}
+			li a {
+				text-decoration: none;
+			}
+			.meta {
+				color: rgb(var(--gray));
+				font-size: 0.85em;
+			}
+			.ai {
+				color: var(--accent-dark);
+			}
+			.empty {
+				color: rgb(var(--gray));
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>{SITE_TITLE}</h1>
+			<p class="lede">
+				매일의 매매 판단과 그 근거를 공개 기록으로 남깁니다. 일부 글은 AI가 초안을 쓰고 사람이
+				검수합니다 — 그런 글에는 하단에 <strong>{AI_DRAFT_NOTICE}</strong> 표기가 붙습니다.
+			</p>
+
+			{
+				sections.map((section) => (
+					<section class="section">
+						<h2>
+							<a href={withBase(`/${section.id}`)}>{section.label}</a>
+						</h2>
+						<p class="section-desc">{section.description}</p>
+						{section.latest.length === 0 ? (
+							<p class="empty">아직 글이 없습니다.</p>
+						) : (
+							<ul>
+								{section.latest.map((post) => (
+									<li>
+										<a href={withBase(`/${section.id}/${post.id}/`)}>{post.data.title}</a>
+										<span class="meta">
+											{' '}
+											— <FormattedDate date={post.data.date} /> · {post.data.desk}
+											{post.data.aiDrafted && <span class="ai"> · AI 초안</span>}
+										</span>
+									</li>
+								))}
+							</ul>
+						)}
+					</section>
+				))
+			}
+		</main>
+		<Footer />
+	</body>
+</html>
