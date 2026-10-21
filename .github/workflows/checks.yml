@@ -1,0 +1,39 @@
+name: Content checks
+
+# Runs on every PR to main. Branch protection requires the "content-checks"
+# job to pass before merge.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: content-checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+
+      - name: Self-test check scripts
+        run: python3 -m unittest discover -s checks/tests -v
+
+      # Only posts added or modified in this PR are checked.
+      # HEAD is the PR merge commit, so HEAD^1 is the base branch tip.
+      - name: List changed posts
+        run: |
+          git -c core.quotepath=off diff --name-only --diff-filter=ACMR HEAD^1 HEAD -- 'blog/src/content/**/*.md' > "$RUNNER_TEMP/changed_posts.txt"
+          echo "Changed posts:"
+          cat "$RUNNER_TEMP/changed_posts.txt"
+
+      - name: numbers_match
+        if: ${{ !cancelled() }}
+        run: python3 checks/numbers_match.py --files-from "$RUNNER_TEMP/changed_posts.txt"
+
+      - name: content_lint
+        if: ${{ !cancelled() }}
+        run: python3 checks/content_lint.py --files-from "$RUNNER_TEMP/changed_posts.txt"
