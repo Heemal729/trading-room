@@ -1,0 +1,43 @@
+name: Notify new PR
+
+# Sends "New PR #<number>: <title>" and the PR URL to Telegram when a PR
+# against main is opened or reopened.
+# Secrets: TELEGRAM_TOKEN, TELEGRAM_CHAT_ID.
+# Keep this file ASCII only (CLAUDE.md). PR title/number/URL come in through
+# env, never interpolated into the script, so a title containing shell syntax
+# is treated as plain text.
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  notify:
+    # Secrets are not passed to PRs from forks; skip those instead of failing.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram message
+        env:
+          TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if [ -z "$TOKEN" ] || [ -z "$CHAT" ]; then
+            echo "::error::TELEGRAM_TOKEN or TELEGRAM_CHAT_ID is not set"
+            exit 1
+          fi
+          text="$(printf 'New PR #%s: %s\n%s' "$PR_NUMBER" "$PR_TITLE" "$PR_URL")"
+          # The bot URL (which contains the token) is read from stdin via
+          # --config so it never appears in argv or in curl error messages.
+          # -o /dev/null keeps the API response out of the log.
+          printf 'url = "https://api.telegram.org/bot%s/sendMessage"\n' "$TOKEN" |
+            curl --config - --fail --silent --show-error -o /dev/null \
+              -X POST \
+              --data-urlencode "chat_id=${CHAT}" \
+              --data-urlencode "text=${text}"
+          echo "Sent notification for PR #${PR_NUMBER}"
