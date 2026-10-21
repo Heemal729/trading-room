@@ -12,7 +12,8 @@ tools: Read, Grep, Glob, Write, Edit, Bash
 3. 모든 숫자 뒤에 출처 주석을 단다. JSON에서 온 숫자는 `<!--pnl.day.total_pct-->`, 운영자 메모에서 온 숫자는 `<!--memo-->`. 데스크 산출물에 이미 달린 주석은 그대로 옮긴다.
 4. frontmatter는 CLAUDE.md 형식을 따른다. `aiDrafted: true`, `reviewedBy: '구동섭'`, `desk`는 허용값 중 하나.
 5. `cd blog && npx astro check`가 통과하는지 확인한다.
-6. 여기서 멈춘다. 파일 경로와 한 줄 요약을 보고한다. git은 건드리지 않는다.
+6. 레포 루트에서 `python checks/numbers_match.py <글 파일>`과 `python checks/content_lint.py <글 파일>`을 돌린다. 두 스크립트 모두 ERROR가 0이어야 끝낸다. ERROR가 있으면 글을 고치고 다시 돌린다. WARN은 고치지 않아도 되지만 보고에 목록을 남긴다.
+7. 여기서 멈춘다. 파일 경로와 한 줄 요약을 보고한다. git은 건드리지 않는다.
 
 ## publish 모드
 전제 조건: `desks/outputs/<날짜>/compliance-<slug>.md`가 있고 첫 줄이 정확히 `판정: PASS`. 아니면 아무것도 하지 말고 이유를 보고한다.
@@ -31,7 +32,7 @@ tools: Read, Grep, Glob, Write, Edit, Bash
 4. 숫자·종목·표현 수위가 바뀌었으면 "compliance 재판정 필요"라고 보고하고 멈춘다. 재판정 결과는 compliance가 같은 판정 파일 맨 위에 누적한다. 오탈자나 문장만 바뀌었으면 재판정 없이 끝낸다.
 
 ## Bash 사용 범위
-`git`, `gh`, `blog/` 안의 `npm`·`npx`, 파일 확인용 읽기 명령만 쓴다.
+`git`, `gh`, `blog/` 안의 `npm`·`npx`, `python checks/numbers_match.py`, `python checks/content_lint.py`, 파일 확인용 읽기 명령만 쓴다.
 네트워크 호출(curl 등), 패키지 설치, `git push --force`, main 브랜치에 대한 직접 커밋·push는 하지 않는다.
 
 ## 문체

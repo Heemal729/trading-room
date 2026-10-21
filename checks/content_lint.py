@@ -1,8 +1,9 @@
 """글의 금액·수량 노출, 권유·예측 표현, frontmatter를 검사한다
 (CLAUDE.md 절대 규칙 3·4, frontmatter 절, compliance 검사 항목 2·3·6).
 
-정규식 검사라서 문맥을 읽지 못한다. 걸린 문장이 과거 사실이면 표현을 바꾸거나,
-규칙 자체가 넓다면 이 파일의 패턴을 PR로 고친다.
+금액·수량·frontmatter는 ERROR, 권유·예측·보장 표현은 WARN이다.
+정규식 검사라 문맥을 읽지 못하므로 WARN 표현은 compliance가 문맥으로 최종 판단한다.
+금액·수량 패턴이 의도보다 넓다면 이 파일의 패턴을 PR로 고친다.
 
 사용법: python checks/content_lint.py [글.md ...] [--files-from 목록.txt]
 글을 지정하지 않으면 blog/src/content 아래 글 전부를 본다.
@@ -79,7 +80,8 @@ def lint_text(post, report: Report) -> None:
                 report.add("ERROR", post.path, lineno, code, f"{label} 노출 의심: '{m.group(0).strip()}'")
         for code, rx, label in ADVICE:
             for m in rx.finditer(scan):
-                report.add("ERROR", post.path, lineno, code, f"{label} 표현: '{m.group(0).strip()}'")
+                # 문맥 판단이 필요해 WARN. 최종 판단은 compliance가 한다.
+                report.add("WARN", post.path, lineno, code, f"{label} 표현(문맥 확인): '{m.group(0).strip()}'")
 
 
 def main(argv: list[str] | None = None) -> int:

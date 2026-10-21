@@ -8,6 +8,7 @@ import contextlib
 import io
 import re
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -63,12 +64,15 @@ class ContentLintTest(unittest.TestCase):
     def test_fail_post(self):
         code, out = run(content_lint, str(FAIL_POST))
         self.assertEqual(code, 1, out)
-        found = set(codes(out))
-        expected = {
+        errors = set(codes(out))
+        expected_errors = {
             "filename", "frontmatter", "desk", "aiDrafted", "reviewedBy", "date",
-            "money-usd", "money-krw", "shares", "recommend", "forecast", "guarantee",
+            "money-usd", "money-krw", "shares",
         }
-        self.assertEqual(expected - found, set(), out)
+        self.assertEqual(expected_errors - errors, set(), out)
+        # 권유·예측·보장 표현은 문맥 판단이 필요해 WARN이다
+        self.assertEqual({"recommend", "forecast", "guarantee"} - set(codes(out, "WARN")), set(), out)
+        self.assertEqual({"recommend", "forecast", "guarantee"} & errors, set(), out)
 
     def test_no_false_positive_on_common_phrases(self):
         ok = [
@@ -78,15 +82,16 @@ class ContentLintTest(unittest.TestCase):
             "원·달러 환율을 본다.",
             "통제 3원칙을 적용했다.",
         ]
-        tmp = FIX / "content" / "journal"
-        for i, line in enumerate(ok):
-            post = tmp / f"2026-10-20-tmp-{i}.md"
-            post.write_text(PASS_POST.read_text(encoding="utf-8") + "\n" + line + "\n", encoding="utf-8")
-            try:
+        # 레포 안에 파일을 만들지 않는다. 컬렉션 폴더 이름 검사 때문에 journal/ 아래에 둔다.
+        with tempfile.TemporaryDirectory() as d:
+            tmp = Path(d) / "journal"
+            tmp.mkdir()
+            for i, line in enumerate(ok):
+                post = tmp / f"2026-10-20-tmp-{i}.md"
+                post.write_text(PASS_POST.read_text(encoding="utf-8") + "\n" + line + "\n", encoding="utf-8")
                 code, out = run(content_lint, str(post))
                 self.assertEqual(code, 0, f"{line!r}\n{out}")
-            finally:
-                post.unlink()
+                self.assertEqual(codes(out, "WARN"), [], f"{line!r}\n{out}")
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ description: 'Astro 블로그 + GitHub Pages + 시크릿 스캔까지 한 번에
 
 - 컬렉션 스키마 팩토리의 인자 타입을 직접 적었더니 `astro check`가 거부했다. Astro가 넘기는 것은 `SchemaContext`다.
 - `pre-commit autoupdate`가 `UnicodeDecodeError: cp949`로 죽었다. 설정 파일에 한글 주석을 넣은 것이 원인이었다.
-- 첫 배포가 404로 실패했다. 워크플로 문제가 아니라 Pages 소스가 `GitHub Actions`로 설정되지 않은 상태였다.
+- 첫 배포가 404<!--memo-->로 실패했다. 워크플로 문제가 아니라 Pages 소스가 `GitHub Actions`로 설정되지 않은 상태였다.
 - 제한종목 장치를 먼저 만들었다. 정작 매매 대상은 미국 상장 주식·ETF뿐이어서 제한종목 목록이 필요한 구조가 아니었다. 공개 레포에 목록을 두면 "무엇이 제한종목인지"가 그대로 드러나 제한 사유가 역추적된다는 문제도 있었다.
 
 ## 어떻게 고쳤나
