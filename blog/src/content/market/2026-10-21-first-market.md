@@ -1,7 +1,7 @@
 ---
 title: '시황 노트 포맷 잡기'
 date: 2026-10-21
-desk: 'Macro'
+desk: 'Research'
 aiDrafted: true
 reviewedBy: '구동섭'
 description: '어떤 지표를 매일 같은 자리에서 볼지 정한다.'
