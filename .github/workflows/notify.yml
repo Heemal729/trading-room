@@ -1,0 +1,31 @@
+name: Notify new draft
+
+# Sends a Telegram message when a PR is opened or reopened.
+# Secrets: TELEGRAM_TOKEN, TELEGRAM_CHAT_ID (repo settings).
+# This file must stay ASCII (CLAUDE.md). The PR title can be Korean; it is
+# passed through env at runtime, not written here.
+on:
+  pull_request:
+    types: [opened, reopened]
+
+permissions: {}
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram
+        env:
+          TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TITLE: ${{ github.event.pull_request.title }}
+          URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if [ -z "$TOKEN" ] || [ -z "$CHAT" ]; then
+            echo "Telegram secrets not available (fork PR or not set); skipping."
+            exit 0
+          fi
+          curl -sS --fail -o /dev/null -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+            -d chat_id="${CHAT}" \
+            --data-urlencode "text=[draft] ${TITLE}
+          ${URL}"
