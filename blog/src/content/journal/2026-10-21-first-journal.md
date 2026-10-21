@@ -3,7 +3,7 @@ title: '트레이딩룸 첫 매매일지'
 date: 2026-10-21
 desk: 'KOSPI'
 aiDrafted: true
-reviewedBy: 'Heemal729'
+reviewedBy: '구동섭'
 description: '일지 포맷을 확정하기 위한 첫 기록.'
 ---
 
