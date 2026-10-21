@@ -4,7 +4,8 @@ import { z } from 'astro/zod';
 
 /**
  * 세 컬렉션이 공유하는 frontmatter 스키마.
- * aiDrafted가 true인 글은 reviewedBy가 반드시 채워져 있어야 빌드가 통과한다.
+ * - aiDrafted는 생략할 수 없다. 빼먹어서 AI 표기가 조용히 누락되는 것을 막는다.
+ * - aiDrafted가 true인 글은 reviewedBy가 반드시 채워져 있어야 빌드가 통과한다.
  */
 const postSchema = ({ image }: SchemaContext) =>
 	z
@@ -14,8 +15,8 @@ const postSchema = ({ image }: SchemaContext) =>
 			date: z.coerce.date(),
 			// 어느 데스크에서 나온 글인지
 			desk: z.string().min(1),
-			// AI가 초안을 썼는지
-			aiDrafted: z.boolean().default(false),
+			// AI가 초안을 썼는지. 기본값을 두지 않는다 — 생략하면 빌드가 실패한다.
+			aiDrafted: z.boolean(),
 			// 검수한 사람
 			reviewedBy: z.string().min(1).optional(),
 			description: z.string().optional(),
