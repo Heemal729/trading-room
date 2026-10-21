@@ -1,0 +1,8 @@
+{
+  "day": { "total_pct": -0.84, "local_pct": -0.70, "fx_pct": -0.14, "benchmark": { "symbol": "QQQ", "ret_pct": -0.60 }, "excess_pctp": -0.24 },
+  "contrib": [
+    { "symbol": "SOXL", "contrib_bp": -45 },
+    { "symbol": "QQQ", "contrib_bp": -20 }
+  ],
+  "residual_bp": 2
+}

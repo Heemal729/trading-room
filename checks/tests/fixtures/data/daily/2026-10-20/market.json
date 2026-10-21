@@ -1,0 +1,11 @@
+{
+  "indices": [
+    { "symbol": "SPX", "name": "S&P 500", "close_lvl": 5800.1, "chg_pct": 0.42, "from_high_pct": -3.1, "above_ma200": true }
+  ],
+  "rates": [
+    { "name": "US10Y", "yield_pct": 4.12, "chg_bp": -3 }
+  ],
+  "fx": [
+    { "pair": "USDKRW", "rate_lvl": 1385.2, "chg_pct": 0.15 }
+  ]
+}
