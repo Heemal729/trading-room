@@ -83,10 +83,12 @@ data/backtests/<slug>/      백테스트 결과 (운영자가 넣음)
   "cash_weight_pct": 32.0
 }
 ```
-- `sleeve` 값:
-  - `core`: 목표 비중으로 자동 운용하는 핵심 슬리브.
-  - `discovery`: 투자위원회 승인을 거쳐 편입하는 개별 종목 슬리브.
-  - `manual`: 운영자가 직접 관리하는 보유. 엔진이 목표 비중을 두지 않아 `target_weight_pct`·`drift_pctp`가 `null`이다.
+- `sleeve` 값 (엔진 설정 기준):
+  - `core`: `targets`의 종목. 목표 비중으로 자동 운용하는 핵심 슬리브.
+  - `discovery`: `discovery_sleeve`의 종목. 투자위원회 승인을 거쳐 편입하는 개별 종목 슬리브.
+  - `manual`: `manual_symbols`의 종목. 운영자가 직접 관리하는 보유. 엔진이 목표 비중을 두지 않아 `target_weight_pct`·`drift_pctp`가 `null`이다.
+  - `other`: `targets`·`discovery_sleeve`·`manual_symbols` 어디에도 없는 보유.
+- 슬리브 소속은 이 `sleeve` 값으로 판단한다. `trades.reason_code`로 판단하지 않는다.
 - `manual`: 운영자가 직접 관리하는 보유면 true. `sleeve: "manual"`과 같이 쓴다.
 - `weight_pct`가 0인 행이 있을 수 있다(목표 비중은 있으나 아직 보유하지 않은 종목). 이때 `ret_since_entry_pct`는 `null`이다.
 
@@ -99,11 +101,13 @@ data/backtests/<slug>/      백테스트 결과 (운영자가 넣음)
 }
 ```
 - 체결이 없는 날은 `"rows": []`다.
-- `reason_code` 사전 (새 코드를 쓰면 여기에 추가한다):
-  - `manual_external`: 엔진 밖에서 운영자가 직접 낸 주문의 체결
-  - `sleeve_buy`: discovery 슬리브 편입 매수
-  - `core_rebalance`: core 슬리브 리밸런싱
-  - `rebalance_band`, `scheduled_contribution`, `manual`, `exit`, `adopt`: v0 초안 코드
+- `reason_code`는 종목 분류가 아니라 **주문 출처** 기준이다. 슬리브 소속 여부는 `reason_code`가 아니라 `positions.json`의 `sleeve`로 판단한다.
+  - 시스템 원장(orders)에 없는 주문: 항상 `manual_external`이다. 매매 차단 중에는 앱에서 낸 매매가 전부 여기에 들어간다(슬리브 종목 매수 포함).
+  - 시스템 주문일 때만 종목에 따라 나뉜다.
+    - `core_rebalance`: `targets` 종목
+    - `sleeve_buy`: `discovery_sleeve` 종목
+    - `manual`: 그 외 종목
+- 새 코드를 쓰면 여기에 추가한다.
 
 ## pnl.json
 ```json
