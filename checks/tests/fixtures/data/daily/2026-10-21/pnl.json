@@ -1,0 +1,5 @@
+{
+  "day": { "total_pct": 1.11, "local_pct": 1.11, "fx_pct": 0.0, "benchmark": { "symbol": "SPY", "ret_pct": 0.22 }, "excess_pctp": 0.89 },
+  "contrib": [],
+  "residual_bp": 0
+}

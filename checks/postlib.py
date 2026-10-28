@@ -1,6 +1,7 @@
 """checks/ 스크립트가 함께 쓰는 글 읽기·보고 도구. 표준 라이브러리만 쓴다."""
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -13,6 +14,40 @@ DATA_ROOT = REPO_ROOT / "data" / "daily"
 
 COMMENT_RE = re.compile(r"<!--(.*?)-->")
 FILENAME_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-[a-z0-9]+(?:-[a-z0-9]+)*\.md$")
+DATE_ONLY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def pre_public_reason(meta: dict, date: str | None = None) -> str | None:
+    """공개 전 데이터면 그 이유를, 공개해도 되는 데이터면 None을 돌려준다 (CLAUDE.md 절대 규칙 9).
+
+    필드가 없는 옛 export도 공개 전으로 본다. date를 주지 않으면 meta의 date와 비교한다.
+    """
+    if "public_inception" not in meta:
+        return "meta.json에 public_inception 필드 없음"
+    inception = meta["public_inception"]
+    if inception is None:
+        return "public_inception이 null"
+    if "pre_public" in (meta.get("notes") or []):
+        return "notes에 pre_public"
+    if not isinstance(inception, str) or not DATE_ONLY_RE.match(inception):
+        return f"public_inception 형식이 YYYY-MM-DD가 아님: {inception!r}"
+    d = date or meta.get("date")
+    if isinstance(d, str) and d < inception:
+        return f"날짜 {d}가 public_inception {inception} 이전"
+    return None
+
+
+def load_meta(path: Path) -> tuple[dict | None, str | None]:
+    """meta.json을 읽는다. (내용, 오류 메시지)"""
+    if not path.exists():
+        return None, f"{path.as_posix()} 없음"
+    try:
+        meta = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        return None, f"{path.name} JSON 파싱 실패: {e}"
+    if not isinstance(meta, dict):
+        return None, f"{path.name}이 객체가 아님"
+    return meta, None
 
 
 @dataclass
@@ -111,10 +146,10 @@ class Report:
             kind = "error" if level == "ERROR" else "warning"
             print(f"::{kind} file={rel},line={line}::[{code}] {msg}")
 
-    def finish(self, name: str, n_files: int) -> int:
+    def finish(self, name: str, n_files: int, unit: str = "글") -> int:
         for line in self.lines:
             print(line)
-        print(f"{name}: 글 {n_files}개, 오류 {self.errors}, 경고 {self.warnings}")
+        print(f"{name}: {unit} {n_files}개, 오류 {self.errors}, 경고 {self.warnings}")
         return 1 if self.errors else 0
 
 

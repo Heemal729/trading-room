@@ -30,6 +30,21 @@ jobs:
           echo "Changed posts:"
           cat "$RUNNER_TEMP/changed_posts.txt"
 
+      # Pre-public data must never reach the public repo (CLAUDE.md rule 9).
+      # Fails if an added/modified data/daily file belongs to a date whose
+      # meta.json has public_inception null/missing, notes "pre_public",
+      # or a date before public_inception.
+      - name: List changed data files
+        if: ${{ !cancelled() }}
+        run: |
+          git -c core.quotepath=off diff --name-only --diff-filter=ACMR HEAD^1 HEAD -- 'data/daily/' > "$RUNNER_TEMP/changed_data.txt"
+          echo "Changed data files:"
+          cat "$RUNNER_TEMP/changed_data.txt"
+
+      - name: data_guard
+        if: ${{ !cancelled() }}
+        run: python3 checks/data_guard.py --files-from "$RUNNER_TEMP/changed_data.txt"
+
       - name: numbers_match
         if: ${{ !cancelled() }}
         run: python3 checks/numbers_match.py --files-from "$RUNNER_TEMP/changed_posts.txt"
