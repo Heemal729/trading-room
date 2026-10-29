@@ -1,11 +1,17 @@
-"""글의 금액·수량 노출, 권유·예측 표현, frontmatter를 검사한다
-(CLAUDE.md 절대 규칙 3·4, frontmatter 절, compliance 검사 항목 2·3·6).
+"""글의 금액·수량 노출, 권유·예측 표현, frontmatter, 공개 전 운용 숫자를 검사한다
+(CLAUDE.md 절대 규칙 3·4·9, frontmatter 절, compliance 검사 항목 2·3·6·10).
 
 금액·수량·frontmatter는 ERROR, 권유·예측·보장 표현은 WARN이다.
 정규식 검사라 문맥을 읽지 못하므로 WARN 표현은 compliance가 문맥으로 최종 판단한다.
 금액·수량 패턴이 의도보다 넓다면 이 파일의 패턴을 PR로 고친다.
 
-사용법: python checks/content_lint.py [글.md ...] [--files-from 목록.txt]
+공개 전(글 날짜가 public_inception 전) 글:
+- 계좌 데이터 출처 주석(<!--pnl.…-->, positions, trades, risk)이 붙은 숫자는 ERROR다.
+- 수익률·손익·비중·기여라는 말과 %·%p·bp 숫자가 한 줄에 있으면 WARN이다(규칙 설명일 수 있어 compliance가 판단).
+- 공개 여부는 data/daily/<글 날짜>/meta.json으로, 그 폴더가 없으면 가장 최근 meta.json으로 판단한다.
+  meta.json이 하나도 없으면 공개 전으로 본다. 구축기는 운용 숫자 없이 쓰면 된다.
+
+사용법: python checks/content_lint.py [글.md ...] [--files-from 목록.txt] [--data-root DIR]
 글을 지정하지 않으면 blog/src/content 아래 글 전부를 본다.
 """
 from __future__ import annotations
@@ -15,7 +21,19 @@ import re
 import sys
 from pathlib import Path
 
-from postlib import COMMENT_RE, CONTENT_ROOT, FILENAME_RE, Report, collect_paths, load_post, mask, utf8_stdout
+from postlib import (
+    COMMENT_RE,
+    CONTENT_ROOT,
+    DATA_ROOT,
+    FILENAME_RE,
+    Report,
+    collect_paths,
+    load_meta,
+    load_post,
+    mask,
+    pre_public_reason,
+    utf8_stdout,
+)
 
 DESKS = {"Research", "Strategy", "Risk", "PnL", "BackOffice", "Compliance", "Infra"}
 COLLECTIONS = {"journal", "market", "buildlog"}
@@ -36,6 +54,26 @@ ADVICE = [
     ("forecast", re.compile(r"(?:오를|상승할|하락할|떨어질|반등할|내릴|올라갈|내려갈|회복할)\s?(?:것|전망|가능성이\s?높)|(?:반등|상승|하락|급등|급락|랠리)\s?(?:예상|전망|기대)"), "방향 예측"),
     ("guarantee", re.compile(r"(?<!불)확실(?!성)|보장|무조건|틀림없|수익(?:을|이)?\s?약속"), "보장성"),
 ]
+# 계좌 운용 숫자의 출처 파일. market.json(시장 지표)은 공개 전에도 쓸 수 있다.
+ACCOUNT_KEY_RE = re.compile(r"^\s*(?:pnl|positions|trades|risk)[.\[]")
+ACCOUNT_WORD_RE = re.compile(r"수익률|손익|비중|기여")
+PCT_NUM_RE = re.compile(rf"{NUM}\s?(?:%p|%|bps|bp)")
+
+
+def pre_public_for_post(date: str | None, data_root: Path) -> str | None:
+    """글 날짜가 공개 전이면 이유를, 공개 후면 None을 돌려준다."""
+    if date is None:
+        return "글 날짜를 읽지 못함"
+    meta_path = data_root / date / "meta.json"
+    if not meta_path.exists():
+        metas = sorted(data_root.glob("*/meta.json")) if data_root.is_dir() else []
+        if not metas:
+            return f"{data_root.as_posix()}에 meta.json이 없어 공개 기준일을 확인할 수 없음"
+        meta_path = metas[-1]  # 폴더 이름이 날짜라 정렬하면 마지막이 최신
+    meta, err = load_meta(meta_path)
+    if err:
+        return err
+    return pre_public_reason(meta, date)
 
 
 def lint_frontmatter(post, report: Report) -> None:
@@ -65,6 +103,23 @@ def lint_frontmatter(post, report: Report) -> None:
             report.add("ERROR", path, at["date"], "date", f"date({fm['date']})와 파일명 날짜({post.date})가 다름")
 
 
+def lint_pre_public(post, data_root: Path, report: Report) -> None:
+    reason = pre_public_for_post(post.date, data_root)
+    if reason is None:
+        return
+    targets = [(post.fm_lines[k], str(post.frontmatter[k])) for k in ("title", "description") if k in post.frontmatter]
+    targets += post.body
+    for lineno, raw in targets:
+        keys = [c.group(1).strip() for c in COMMENT_RE.finditer(mask(raw, keep_comments=True))]
+        account = [k for k in keys if ACCOUNT_KEY_RE.match(k)]
+        if account:
+            report.add("ERROR", post.path, lineno, "pre-public", f"공개 전 글에 운용 숫자({', '.join(account)}): {reason}")
+            continue
+        scan = mask(raw)
+        if ACCOUNT_WORD_RE.search(scan) and PCT_NUM_RE.search(scan):
+            report.add("WARN", post.path, lineno, "pre-public-words", f"공개 전 글에 수익률·손익·비중 숫자로 보이는 표현(문맥 확인): {reason}")
+
+
 def lint_text(post, report: Report) -> None:
     targets = [(post.fm_lines[k], str(post.frontmatter[k])) for k in ("title", "description") if k in post.frontmatter]
     targets += post.body
@@ -90,6 +145,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("paths", nargs="*")
     ap.add_argument("--files-from")
     ap.add_argument("--content-root", default=str(CONTENT_ROOT))
+    ap.add_argument("--data-root", default=str(DATA_ROOT))
     a = ap.parse_args(argv)
     paths = collect_paths(a.paths, a.files_from, Path(a.content_root))
     report = Report()
@@ -97,6 +153,7 @@ def main(argv: list[str] | None = None) -> int:
         post = load_post(p)
         lint_frontmatter(post, report)
         lint_text(post, report)
+        lint_pre_public(post, Path(a.data_root), report)
     return report.finish("content_lint", len(paths))
 
 

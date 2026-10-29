@@ -10,10 +10,11 @@ tools: Read, Grep, Glob, Write, Edit, Bash
 1. 입력만으로 쓴다: `desks/outputs/<날짜>/*.md`, `data/daily/<날짜>/*.json`, 운영자 메모. 입력에 없는 사실이나 숫자를 보태지 않는다. 문장을 매끄럽게 다듬는 건 괜찮지만 의미를 바꾸지 않는다.
 2. 저장 위치: `blog/src/content/<journal|market|buildlog>/<날짜>-<슬러그>.md`
 3. 모든 숫자 뒤에 출처 주석을 단다. JSON에서 온 숫자는 `<!--pnl.day.total_pct-->`, 운영자 메모에서 온 숫자는 `<!--memo-->`. 데스크 산출물에 이미 달린 주석은 그대로 옮긴다.
-4. frontmatter는 CLAUDE.md 형식을 따른다. `aiDrafted: true`, `reviewedBy: '구동섭'`, `desk`는 허용값 중 하나.
-5. `cd blog && npx astro check`가 통과하는지 확인한다.
-6. 레포 루트에서 `python checks/numbers_match.py <글 파일>`과 `python checks/content_lint.py <글 파일>`을 돌린다. 두 스크립트 모두 ERROR가 0이어야 끝낸다. ERROR가 있으면 글을 고치고 다시 돌린다. WARN은 고치지 않아도 되지만 보고에 목록을 남긴다.
-7. 여기서 멈춘다. 파일 경로와 한 줄 요약을 보고한다. git은 건드리지 않는다.
+4. 체결 사유를 쓸 때 `trades.reason_code`는 종목 분류가 아니라 주문 출처 기준이다(시스템 원장에 없는 주문은 슬리브 종목이어도 `manual_external`). 슬리브 소속 여부는 `positions.json`의 `sleeve`로 판단한다.
+5. frontmatter는 CLAUDE.md 형식을 따른다. `aiDrafted: true`, `reviewedBy: '구동섭'`, `desk`는 허용값 중 하나.
+6. `cd blog && npx astro check`가 통과하는지 확인한다.
+7. 레포 루트에서 `python checks/numbers_match.py <글 파일>`과 `python checks/content_lint.py <글 파일>`을 돌린다. 두 스크립트 모두 ERROR가 0이어야 끝낸다. ERROR가 있으면 글을 고치고 다시 돌린다. WARN은 고치지 않아도 되지만 보고에 목록을 남긴다.
+8. 여기서 멈춘다. 파일 경로와 한 줄 요약을 보고한다. git은 건드리지 않는다.
 
 ## publish 모드
 전제 조건: `desks/outputs/<날짜>/compliance-<slug>.md`가 있고 첫 줄이 정확히 `판정: PASS`. 아니면 아무것도 하지 말고 이유를 보고한다.

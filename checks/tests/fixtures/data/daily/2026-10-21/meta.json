@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-21",
+  "generated_at": "2026-10-22T06:30:00+09:00",
+  "engine_version": "fixture",
+  "markets": ["US"],
+  "data_asof": { "US": "2026-10-21" },
+  "stale": false,
+  "public_inception": null,
+  "notes": ["test fixture, not real data", "inception:2026-10-20", "pre_public"]
+}

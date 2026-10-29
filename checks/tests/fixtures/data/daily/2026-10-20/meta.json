@@ -5,5 +5,6 @@
   "markets": ["US"],
   "data_asof": { "US": "2026-10-20" },
   "stale": false,
-  "notes": ["test fixture, not real data"]
+  "public_inception": "2026-10-20",
+  "notes": ["test fixture, not real data", "inception:2026-10-20"]
 }
