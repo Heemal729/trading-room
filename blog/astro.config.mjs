@@ -1,14 +1,20 @@
 // @ts-check
 
+import { satteri } from '@astrojs/markdown-satteri';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig, fontProviders } from 'astro/config';
+import { singleTildeLiteral } from './src/lib/single-tilde.mjs';
 
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://heemal729.github.io',
 	base: '/trading-room',
 	integrations: [mdx(), sitemap()],
+	markdown: {
+		// Single-tilde strikethrough off ("15~20%" stays literal); "~~x~~" still works.
+		processor: satteri({ mdastPlugins: [singleTildeLiteral] }),
+	},
 	fonts: [
 		{
 			provider: fontProviders.local(),
