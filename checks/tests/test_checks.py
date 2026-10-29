@@ -83,6 +83,10 @@ class ContentLintTest(unittest.TestCase):
             "3주 연속 하락했다.",
             "원·달러 환율을 본다.",
             "통제 3원칙을 적용했다.",
+            "비중은 15~20% 범위다.",
+            "~~취소~~와 ~~또 취소~~",
+            "15\\~20%와 30\\~40%",
+            "`a~b` 코드 안의 `c~d`",
         ]
         # 레포 안에 파일을 만들지 않는다. 컬렉션 폴더 이름 검사 때문에 journal/ 아래에 둔다.
         with tempfile.TemporaryDirectory() as d:
@@ -124,6 +128,23 @@ class ContentLintTest(unittest.TestCase):
         code, out = self._lint_tmp("journal", "2026-10-20-tmp-nometa.md", "오늘은 -0.84%<!--pnl.day.total_pct--> 손실이다.", FIX / "nowhere")
         self.assertEqual(code, 1, out)
         self.assertIn("pre-public", codes(out), out)
+
+    def test_single_tilde_warn(self):
+        with tempfile.TemporaryDirectory() as d:
+            tmp = Path(d) / "journal"
+            tmp.mkdir()
+            post = tmp / "2026-10-20-tmp-tilde.md"
+            post.write_text(PASS_POST.read_text(encoding="utf-8") + "\n비중은 15~20%와 30~40%다.\n", encoding="utf-8")
+            code, out = run(content_lint, "--data-root", str(DATA), str(post))
+            self.assertEqual(code, 0, out)  # WARN은 실패가 아니다
+            self.assertEqual(codes(out, "WARN"), ["single-tilde"], out)
+
+    def test_pre_public_and_single_tilde_both_reported(self):
+        # 두 검사는 서로 독립이다. 공개 전 글에서도 물결표 WARN이 같이 나와야 한다.
+        code, out = self._lint_tmp("journal", "2026-10-21-tmp-both.md", "오늘은 1.11%<!--pnl.day.total_pct--> 올랐다. 범위는 15~20%와 30~40%다.")
+        self.assertEqual(code, 1, out)
+        self.assertIn("pre-public", codes(out), out)
+        self.assertIn("single-tilde", codes(out, "WARN"), out)
 
 
 class DataGuardTest(unittest.TestCase):

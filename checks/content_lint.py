@@ -2,6 +2,8 @@
 (CLAUDE.md 절대 규칙 3·4·9, frontmatter 절, compliance 검사 항목 2·3·6·10).
 
 금액·수량·frontmatter는 ERROR, 권유·예측·보장 표현은 WARN이다.
+한 줄에 단일 물결표(~)가 두 개 이상이면 WARN이다. 블로그 설정이 단일 물결표 취소선을 끄지만,
+설정이 빠지거나 바뀌면 "15~20%와 30~40%"가 취소선으로 렌더링되므로 백업으로 본다.
 정규식 검사라 문맥을 읽지 못하므로 WARN 표현은 compliance가 문맥으로 최종 판단한다.
 금액·수량 패턴이 의도보다 넓다면 이 파일의 패턴을 PR로 고친다.
 
@@ -54,6 +56,8 @@ ADVICE = [
     ("forecast", re.compile(r"(?:오를|상승할|하락할|떨어질|반등할|내릴|올라갈|내려갈|회복할)\s?(?:것|전망|가능성이\s?높)|(?:반등|상승|하락|급등|급락|랠리)\s?(?:예상|전망|기대)"), "방향 예측"),
     ("guarantee", re.compile(r"(?<!불)확실(?!성)|보장|무조건|틀림없|수익(?:을|이)?\s?약속"), "보장성"),
 ]
+# ~~취소~~(두 개짜리)와 \~(이스케이프)는 세지 않는다
+SINGLE_TILDE = re.compile(r"(?<![~\\])~(?!~)")
 # 계좌 운용 숫자의 출처 파일. market.json(시장 지표)은 공개 전에도 쓸 수 있다.
 ACCOUNT_KEY_RE = re.compile(r"^\s*(?:pnl|positions|trades|risk)[.\[]")
 ACCOUNT_WORD_RE = re.compile(r"수익률|손익|비중|기여")
@@ -137,6 +141,8 @@ def lint_text(post, report: Report) -> None:
             for m in rx.finditer(scan):
                 # 문맥 판단이 필요해 WARN. 최종 판단은 compliance가 한다.
                 report.add("WARN", post.path, lineno, code, f"{label} 표현(문맥 확인): '{m.group(0).strip()}'")
+        if len(SINGLE_TILDE.findall(scan)) >= 2:
+            report.add("WARN", post.path, lineno, "single-tilde", "한 줄에 단일 물결표가 두 개 이상: 설정이 빠지면 취소선으로 렌더링됨(렌더링 확인)")
 
 
 def main(argv: list[str] | None = None) -> int:
